@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEP POC – Data Ingestion Portal</title>
+  <meta name="description" content="Adobe Experience Platform proof-of-concept data ingestion and exploration portal." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header__inner">
+      <div class="header__brand">
+        <svg class="header__logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="36" height="36" rx="8" fill="#EB1000"/>
+          <path d="M21.6 6H28L15.6 30H9.2L21.6 6Z" fill="white"/>
+          <path d="M8 6H14.4L8 18.6V6Z" fill="white"/>
+          <path d="M22 30H28L22 17.4V30Z" fill="white"/>
+        </svg>
+        <span class="header__title">AEP <span class="header__accent">POC</span></span>
+      </div>
+      <nav class="header__nav" aria-label="Primary navigation">
+        <button class="nav-btn active" data-panel="ingest" id="nav-ingest">Ingest</button>
+        <button class="nav-btn" data-panel="profile" id="nav-profile">Profile</button>
+        <button class="nav-btn" data-panel="query" id="nav-query">Query</button>
+        <button class="nav-btn" data-panel="segments" id="nav-segments">Segments</button>
+        <button class="nav-btn" data-panel="alerts" id="nav-alerts">Alerts</button>
+      </nav>
+      <div class="header__status" id="api-status" title="API connectivity status">
+        <span class="status-dot"></span>
+        <span class="status-label">Checking…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- INGEST PANEL -->
+    <section class="panel active" id="panel-ingest" aria-label="Data ingestion panel">
+      <div class="panel__header">
+        <h1 class="panel__title">Batch data ingestion</h1>
+        <p class="panel__subtitle">Submit XDM records to an AEP dataset via the Batch Ingestion API.</p>
+      </div>
+      <div class="form-card">
+        <label class="field-label" for="ingest-dataset-id">Dataset ID</label>
+        <input class="field-input" type="text" id="ingest-dataset-id" placeholder="e.g. 65a1c2d3e4f5a6b7c8d9e0f1" autocomplete="off" />
+
+        <label class="field-label" for="ingest-records">XDM Records <span class="field-hint">(JSON array)</span></label>
+        <textarea class="field-textarea" id="ingest-records" rows="14" spellcheck="false" placeholder='[
+  {
+    "_id": "cust-001",
+    "personalEmail": { "address": "alice@example.com" },
+    "person": { "name": { "firstName": "Alice", "lastName": "Smith" } },
+    "loyaltyDetails": { "tier": "gold", "points": 7200, "joinDate": "2022-03-15" }
+  }
+]'></textarea>
+
+        <div class="form-actions">
+          <button class="btn btn--primary" id="btn-ingest">
+            <span class="btn__icon">↑</span> Submit batch
+          </button>
+          <button class="btn btn--ghost" id="btn-ingest-sample">Load sample</button>
+        </div>
+
+        <div class="result-box" id="ingest-result" hidden></div>
+      </div>
+    </section>
+
+    <!-- PROFILE PANEL -->
+    <section class="panel" id="panel-profile" aria-label="Profile lookup panel">
+      <div class="panel__header">
+        <h1 class="panel__title">Profile lookup</h1>
+        <p class="panel__subtitle">Retrieve a unified Real-Time Customer Profile by identity.</p>
+      </div>
+      <div class="form-card">
+        <div class="row-2">
+          <div>
+            <label class="field-label" for="profile-namespace">Identity namespace</label>
+            <input class="field-input" type="text" id="profile-namespace" value="Email" placeholder="e.g. Email, CRMID" />
+          </div>
+          <div>
+            <label class="field-label" for="profile-id">Identity value</label>
+            <input class="field-input" type="text" id="profile-id" placeholder="e.g. alice@example.com" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn--primary" id="btn-profile">
+            <span class="btn__icon">⟳</span> Look up profile
+          </button>
+        </div>
+        <div class="result-box" id="profile-result" hidden></div>
+      </div>
+    </section>
+
+    <!-- QUERY PANEL -->
+    <section class="panel" id="panel-query" aria-label="Query service panel">
+      <div class="panel__header">
+        <h1 class="panel__title">Query Service</h1>
+        <p class="panel__subtitle">Run ANSI SQL against the AEP Data Lake.</p>
+      </div>
+      <div class="form-card">
+        <label class="field-label" for="query-name">Query name <span class="field-hint">(optional)</span></label>
+        <input class="field-input" type="text" id="query-name" placeholder="e.g. Customer count by loyalty tier" />
+
+        <label class="field-label" for="query-sql">SQL</label>
+        <textarea class="field-textarea field-textarea--code" id="query-sql" rows="10" spellcheck="false"
+          placeholder="SELECT loyaltyDetails.tier, COUNT(*) AS cnt
+FROM your_sandbox.your_dataset
+GROUP BY loyaltyDetails.tier
+ORDER BY cnt DESC"></textarea>
+
+        <div class="form-actions">
+          <button class="btn btn--primary" id="btn-query">
+            <span class="btn__icon">▶</span> Run query
+          </button>
+          <button class="btn btn--ghost" id="btn-query-sample">Load sample</button>
+        </div>
+        <div class="result-box" id="query-result" hidden></div>
+      </div>
+    </section>
+
+    <!-- SEGMENTS PANEL -->
+    <section class="panel" id="panel-segments" aria-label="Segments panel">
+      <div class="panel__header">
+        <h1 class="panel__title">Audience segments</h1>
+        <p class="panel__subtitle">View all PQL-based segment definitions in the current sandbox.</p>
+      </div>
+      <div class="panel__actions">
+        <button class="btn btn--primary" id="btn-load-segments">
+          <span class="btn__icon">⟳</span> Load segments
+        </button>
+      </div>
+      <div id="segments-list" class="data-grid-wrapper"></div>
+    </section>
+
+    <!-- ALERTS PANEL -->
+    <section class="panel" id="panel-alerts" aria-label="Alerts panel">
+      <div class="panel__header">
+        <h1 class="panel__title">Alert rules</h1>
+        <p class="panel__subtitle">Active Observability Insights alert rules for this sandbox.</p>
+      </div>
+      <div class="panel__actions">
+        <button class="btn btn--primary" id="btn-load-alerts">
+          <span class="btn__icon">⟳</span> Load alerts
+        </button>
+      </div>
+      <div id="alerts-list" class="data-grid-wrapper"></div>
+    </section>
+
+  </main>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
